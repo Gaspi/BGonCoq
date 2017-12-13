@@ -1,31 +1,30 @@
+
 Require Import Game.
 
 
-Section BaseGame.
+Module Basic(G : Game).
+  Import G.
+  
+  Definition decision_fun (s:state)  (p:player) := decision p (observable s p).
+  Definition strategy     (p:player) (s:state)  := decision p (observable s p).
+
+  Definition strategy (p:player) := forall s:state, decision p ().
+  
+  Definition final_state (s:state g) := forall f:decision_fun s, rules g s f = s.
+  
+  Definition decisionless_state (s:state g) := not (inhabited (decision_fun s)).
+  
+  Lemma decisionless_is_final : forall s:state g, decisionless_state s -> final_state s.
+  Proof.
+    intros.
+    intro.
+    edestruct H.
+    exact (inhabits f).
+  Qed.
+
 
 Require Import Ensembles.
 Require Import Image.
-
-Variable g:Game.
-
-
-Definition decision_fun (s:state g) := (forall p:player g, decision g s p).
-
-Definition strategy := forall p:player g, forall s:state g, decision g s p.
-
-Definition final_state (s:state g) := forall f:decision_fun s, rules g s f = s.
-
-Definition decisionless_state (s:state g) := not (inhabited (decision_fun s)).
-
-Lemma decisionless_is_final : forall s:state g, decisionless_state s -> final_state s.
-Proof.
-  intros.
-  intro.
-  edestruct H.
-  exact (inhabits f).
-Qed.
-
-
 
 Definition empty_game := final_state (start g).
 
