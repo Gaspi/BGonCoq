@@ -1,9 +1,9 @@
 
 
 Module Type Game.
-  Parameter player : Set.   (* The players *)
-  Parameter state : Set.    (* What the board looks like *)
-  Parameter start : state.  (* How to set it up for a new game *)
+  Parameter player : Set.   (*  Who are the players ?      *)
+  Parameter state : Set.    (*  What is the board like ?   *)
+  Parameter start : state.  (*  How should we set it up ?  *)
   
   (* The set of information potentially available to a player *)
   Parameter observable : player -> Set.
@@ -20,10 +20,71 @@ Module Type Game.
   Parameter rules : forall s : state,
     (forall p:player, decision p (get_observable s p)) ->
     state.
-End Game.  
+End Game.
 
-Module BasicProperties (G : Game).
-  Import G.
+Module RPSGame : Game.
+  
+  Inductive player : Set :=
+  | playerA : player
+  | playerB : player.
+  
+  Inductive moves : Set :=
+  | Rock : moves
+  | Paper : moves
+  | Scissor : moves.
+
+  Inductive state : Set :=
+  | HandsReady : state
+  | HandsDown : (player -> moves) -> state.
+  
+  Definition start : state := HandsReady.
+  
+  Definition observable (p:player) : Set := option (player -> moves).
+  
+  Definition get_observable (s:state) (p : player) : observable p :=
+    match s with
+    | HandsReady  => None
+    | HandsDown obs => Some obs
+    end.
+  
+  Definition decision (p : player) (o : observable p) : Set :=
+    match o with
+    | None  => moves
+    | Some _ => Empty_set
+    end.
+  
+  Definition rules (s : state) (move : forall p:player, decision p (get_observable s p)) : state.
+  Proof.
+    destruct s.
+    apply HandsDown.
+    intro.
+    apply move.
+    exact H.
+    exact (HandsDown m).
+  Qed.
+  Print rules.
+
+  Definition rules2 (s : state) (move : forall p:player, decision p (get_observable s p)) : state :=
+    match s
+    with
+    | HandsReady =>
+      fun
+        move0 : forall p : player,
+          decision p (get_observable HandsReady p) =>
+        HandsDown (fun H : player => move0 H)
+    | HandsDown m =>
+      fun _ : forall p : player, decision p (get_observable (HandsDown m) p) =>
+        HandsDown m
+    end move.
+  
+
+end IntGame.
+
+
+
+
+
+Module BasicProperties (Import G : Game).
 
   Definition player_decision_space (s:state) (p:player) : Set :=
     decision p (get_observable s p).
@@ -55,16 +116,30 @@ Module BasicProperties (G : Game).
     destruct H.
     exact (inhabits dec).
     Qed.
-  
-    
+      
 End BasicProperties.
 
 
 
+
 Module Type WinnableGame (Import G : Game).
+  
+  Parameter winner : state -> option player.
+  
+  Definition is_winning (s : state) : bool :=
+    match winner s with
+    | None => false
+    | Some p => true end.
+  
   Module BP := BasicProperties G.
   Import BP.
-  Parameter 
+  
+  Axiom winning_is_decisionless : forall s : state, is_winning s = true -> decisionless_state s.
+  
+End WinnableGame.
+
+
+
 
 Module Type CompleteInformationGame (Import G : Game).
   Parameter deduce_state : forall (p:player), observable p -> state.
