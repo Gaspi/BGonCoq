@@ -64,7 +64,11 @@ End BasicProperties.
 Module Type WinnableGame (Import G : Game).
   Module BP := BasicProperties G.
   Import BP.
-  Parameter 
+  Parameter winner : state -> option player.
+  Axiom winning_is_looping : Prop :=
+    forall s:state, winner
+End WinnableGame.
+
 
 Module Type CompleteInformationGame (Import G : Game).
   Parameter deduce_state : forall (p:player), observable p -> state.
