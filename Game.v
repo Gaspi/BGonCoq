@@ -22,6 +22,9 @@ Module Type Game.
     state.
 End Game.
 
+
+
+
 Module RPSGame : Game.
   
   Inductive player : Set :=
@@ -62,8 +65,10 @@ Module RPSGame : Game.
     exact H.
     exact (HandsDown m).
   Qed.
+  
   Print rules.
-
+  
+(*
   Definition rules2 (s : state) (move : forall p:player, decision p (get_observable s p)) : state :=
     match s
     with
@@ -76,9 +81,9 @@ Module RPSGame : Game.
       fun _ : forall p : player, decision p (get_observable (HandsDown m) p) =>
         HandsDown m
     end move.
-  
+*)
 
-end IntGame.
+End RPSGame.
 
 
 
@@ -126,19 +131,23 @@ Module Type WinnableGame (Import G : Game).
   
   Parameter winner : state -> option player.
   
-  Definition is_winning (s : state) : bool :=
+  Definition has_winner (s : state) : bool :=
     match winner s with
     | None => false
     | Some p => true end.
+  
+  Definition is_winning (s : state) : Prop := exists p : player, winner s = Some p.
   
   Module BP := BasicProperties G.
   Import BP.
   
   Axiom winning_is_decisionless : forall s : state, is_winning s = true -> decisionless_state s.
   
+  Parameter winner : state -> option player.
+  
+  Axiom winning_is_looping : Prop :=
+    forall s:state, winner
 End WinnableGame.
-
-
 
 
 Module Type CompleteInformationGame (Import G : Game).
@@ -149,5 +158,4 @@ Module Type CompleteInformationGame (Import G : Game).
   (* Proof that the state inferred is always correct. *)
   
 End CompleteInformationGame.
-
 
