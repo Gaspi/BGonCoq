@@ -59,29 +59,22 @@ Module RPSGame : Game.
   Definition rules (s : state) (move : forall p:player, decision p (get_observable s p)) : state.
   Proof.
     destruct s.
-    apply HandsDown.
-    intro.
-    apply move.
-    exact H.
+    simpl in move.
+    exact (HandsDown move).
     exact (HandsDown m).
   Qed.
   
   Print rules.
-  
-(*
-  Definition rules2 (s : state) (move : forall p:player, decision p (get_observable s p)) : state :=
-    match s
-    with
-    | HandsReady =>
-      fun
-        move0 : forall p : player,
-          decision p (get_observable HandsReady p) =>
-        HandsDown (fun H : player => move0 H)
-    | HandsDown m =>
-      fun _ : forall p : player, decision p (get_observable (HandsDown m) p) =>
-        HandsDown m
-    end move.
-*)
+
+  Eval compute in
+      rules
+        HandsReady
+        (fun p : player =>
+           match p with
+           | playerA => Rock
+           | playerB => Paper
+           end)
+  .
 
 End RPSGame.
 
@@ -107,6 +100,7 @@ Module BasicProperties (Import G : Game).
   Definition looping_state (s:state) : Prop :=
     forall (dec : decision_space s), rules s dec = s.
   
+  (* Difference between empty decision space and singleton decision space !!! *)
   Definition decisionless_state_player (s:state) (p:player) : Prop :=
     not (inhabited (player_decision_space s p)).
   
